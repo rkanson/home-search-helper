@@ -2,13 +2,14 @@ require("dotenv").config();
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const AdblockerPlugin = require("puppeteer-extra-plugin-adblocker");
+const { GoogleSpreadsheet } = require("google-spreadsheet");
 const ObjectsToCsv = require("objects-to-csv");
 
 puppeteer.use(StealthPlugin());
 puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
 
 const options = {
-  headless: true,
+  headless: process.env.HEADLESS == 0 ? true : false,
   defaultViewport: null,
 };
 
@@ -45,8 +46,12 @@ const options = {
     waitUntil: "networkidle2",
   });
 
-  console.log("Loading in all houses...");
-  var loading = true;
+  var loading = process.env.LOADING == 1 ? true : false;
+  if (loading) {
+    console.log("Loading in all houses...");
+  } else {
+    console.log("Loading in first set of houses...");
+  }
 
   while (loading) {
     await page.evaluate(() => {
@@ -90,9 +95,16 @@ const options = {
     }
 
     function getStatus(el) {
-      const status = el.querySelector("[data-testid=property-tag0] span");
+      const status = el.querySelector("[data-testid=property-tag-0] span");
+      const status_if_new = el.querySelector(
+        "[data-testid=property-tag-1] span"
+      );
       if (status != null || status != undefined) {
-        return status.innerText;
+        if (status_if_new != null || status_if_new != undefined) {
+          return `${status.innerText}, ${status_if_new.innerText}`;
+        } else {
+          return status.innerText;
+        }
       }
     }
 
@@ -123,10 +135,41 @@ const options = {
     return arr;
   });
 
+  console.log("Closing browser.");
+  await browser.close();
+
+  console.log("Authorizing Google Sheets...");
+  const doc = new GoogleSpreadsheet(process.env.SHEET_ID);
+  await doc.useServiceAccountAuth({
+    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    private_key: process.env.GOOGLE_PRIVATE_KEY,
+  });
+
+  await doc.loadInfo();
+  const sheet = doc.sheetsByIndex[0];
+  await sheet.updateProperties({ title: "old" });
+  const newSheet = await doc.addSheet({
+    title: "Table of Houses",
+    headerValues: [
+      "image",
+      "price",
+      "beds",
+      "baths",
+      "rooms",
+      "sqft",
+      "address",
+      "address_l1",
+      "address_l2",
+      "status",
+      "trulia",
+    ],
+  });
+  await sheet.delete();
+
+  console.log("Adding to Google Sheets...");
+  await newSheet.addRows(houses);
+
   console.log("Complete! Outputting to CSV.");
   const csv = new ObjectsToCsv(houses);
   csv.toDisk("./houses.csv");
-
-  console.log("Closing browser.");
-  await browser.close();
 })();
