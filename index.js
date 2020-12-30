@@ -8,7 +8,7 @@ puppeteer.use(StealthPlugin());
 puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
 
 const options = {
-  headless: false,
+  headless: true,
   defaultViewport: null,
 };
 
@@ -62,26 +62,30 @@ const options = {
     }
   }
 
-  if (loading == false) {
-    console.log("Jumping back to the top...");
-    await page.evaluate(() => {
-      window.scrollTo(0, 0);
-    });
-  }
-
   console.log("Gathering data...");
   await page.waitForSelector("[data-testid=saved-homes-list]");
   const houses = await page.evaluate(() => {
     var list = document.querySelector("[data-testid=saved-homes-list]");
     var arr = [];
 
+    function getText(el, attr) {
+      const item = el.querySelector(`[data-testid=${attr}]`);
+      if (item != null || item != undefined) {
+        return item.innerText;
+      }
+    }
+
+    function getImage(el) {
+      const img = el.querySelector("[data-testid=property-image-0] img");
+      if (img != null || img != undefined) {
+        return img.src;
+      }
+    }
+
     Array.from(list.children).forEach((el) => {
-      if (el) {
-        function getText(el, attr) {
-          return el.querySelector(`[data-testid=${attr}]`).innerText;
-        }
+      if (el != null || el != undefined) {
         var house = {
-          // img: el.querySelector("[data-testid=property-image-0] img").src,
+          img: getImage(el),
           price: getText(el, "property-price"),
           beds: getText(el, "property-beds"),
           baths: getText(el, "property-baths"),
