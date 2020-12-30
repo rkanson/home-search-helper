@@ -89,6 +89,13 @@ const options = {
       }
     }
 
+    function getStatus(el) {
+      const status = el.querySelector("[data-testid=property-tag0] span");
+      if (status != null || status != undefined) {
+        return status.innerText;
+      }
+    }
+
     Array.from(list.children).forEach((el) => {
       if (el != null || el != undefined) {
         var house = {
@@ -107,6 +114,7 @@ const options = {
           )}`,
           address_l1: `${getText(el, "property-street")}`,
           address_l2: `${getText(el, "property-region")}`,
+          status: getStatus(el),
           trulia: getLink(el),
         };
       }
