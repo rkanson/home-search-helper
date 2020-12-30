@@ -1,6 +1,6 @@
 # Home Search Helper
 
-Wanted to filter/sort by certain attributes but Trulia doesn't allow that. So I scrape their data via Puppeteer and output to a CSV instead. This then gets uploaded to Google Drive, where it feeds an AppSheet app.
+Wanted to filter/sort by certain attributes but Trulia doesn't allow that. So this fetches Trulia data, does a little magic, and feeds an AppSheet app.
 
 ## Local Setup
 

@@ -82,18 +82,32 @@ const options = {
       }
     }
 
+    function getLink(el) {
+      const link = el.querySelector("[data-testid=home-card-sale] a");
+      if (link != null || link != undefined) {
+        return link.href;
+      }
+    }
+
     Array.from(list.children).forEach((el) => {
       if (el != null || el != undefined) {
         var house = {
-          img: getImage(el),
+          image: getImage(el),
           price: getText(el, "property-price"),
           beds: getText(el, "property-beds"),
           baths: getText(el, "property-baths"),
+          rooms: `${getText(el, "property-beds")}, ${getText(
+            el,
+            "property-baths"
+          )}`,
           sqft: getText(el, "property-floorSpace"),
           address: `${getText(el, "property-street")} ${getText(
             el,
             "property-region"
           )}`,
+          address_l1: `${getText(el, "property-street")}`,
+          address_l2: `${getText(el, "property-region")}`,
+          trulia: getLink(el),
         };
       }
       arr.push(house);
