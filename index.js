@@ -9,7 +9,7 @@ puppeteer.use(StealthPlugin());
 puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
 
 const options = {
-  headless: process.env.HEADLESS == 0 ? true : false,
+  headless: true,
   defaultViewport: null,
 };
 
