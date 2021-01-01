@@ -9,22 +9,8 @@ const ObjectsToCsv = require("objects-to-csv");
   const user_2 = await getTrulia(process.env.EMAIL_2, process.env.PASSWORD_2);
 
   console.log("Combining users & removing duplicates...");
-  let larger, smaller;
-  if (user_1.length > user_2.length) {
-    larger = user_1.length;
-    smaller = user_2.length;
-  } else {
-    larger = user_2.length;
-    smaller = user_1.length;
-  }
-  let houses = [...larger];
-  smaller.forEach((s) => {
-    houses.forEach((h) => {
-      if (s.address != h.address) {
-        houses.push(s);
-      }
-    });
-  });
+  const all_houses = [...user_1, ...user_2];
+  const houses = Array.from(new Set(all_houses));
 
   console.log("Authorizing Google Sheets...");
   const doc = new GoogleSpreadsheet(process.env.SHEET_ID);
@@ -48,10 +34,12 @@ const ObjectsToCsv = require("objects-to-csv");
 
   console.log("Adding to Google Sheets...");
   await sheet.addRows(houses);
-  await combSheet.addRows(user_1);
-  await combSheet.addRows(user_2);
+  // await combSheet.addRows(user_1);
+  // await combSheet.addRows(user_2);
 
   console.log("Complete! Outputting to CSV.");
   const csv = new ObjectsToCsv(houses);
+  const combCsv = new ObjectsToCsv(all_houses);
   csv.toDisk("./houses.csv");
+  combCsv.toDisk("./comb-houses.csv");
 })();
